@@ -7,8 +7,15 @@ $blue: #9dcdc0;
 }
 
 body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     font-family: sans-serif;
     padding: 5vh 20vw;
+}
+
+#content-container {
+    flex: 1;
 }
 
 h1 {
@@ -54,7 +61,7 @@ a, a:visited {
 }
 
 footer {
-    margin-top: 10em;
+    margin-top: 2em;
     text-align: center;
     color: $blue;
 }
