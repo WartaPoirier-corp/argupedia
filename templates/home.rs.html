@@ -1,0 +1,14 @@
+@use crate::templates::base;
+@use crate::templates::statics;
+
+@()
+
+@:base("Accueil", {
+    <img src="/static/@statics::logo_png.name">
+    <h1>Bienvenue sur Argupédia !</h1>
+    <p>Quelle est la question dont vous débatez aujourd'hui ?</p>
+    <form action="debate" method="GET">
+        <input type="text" name="debate">
+        <input type="submit" value="Trouver des arguments percutants">
+    </form>
+})

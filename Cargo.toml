@@ -1,0 +1,16 @@
+[package]
+name = "argupedia"
+version = "0.1.0"
+authors = ["Ana Gelez <ana@gelez.xyz>"]
+edition = "2018"
+
+[dependencies]
+actix-web = "2.0"
+actix-rt = "1.0"
+log = "0.4"
+env_logger = "0.7"
+serde = { version = "1.0", features = [ "derive" ] }
+mime = "0.3"
+
+[build-dependencies]
+ructe = { version = "0.9", features = [ "sass", "mime03" ] }

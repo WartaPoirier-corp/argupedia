@@ -1,0 +1,12 @@
+@use crate::templates::base;
+
+@(title: &str, details: &str)
+
+@:base(title, {
+    <main class="error">
+        <h1>:(</h1>
+        <h2>@title</h2>
+        <p>@details</p>
+        <a href="/">Revenir à l'accueil</a>
+    </main>
+})
