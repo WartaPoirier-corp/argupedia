@@ -66,22 +66,33 @@ struct APIResponse {
     answer: String,
 }
 
-async fn api(query: web::Query<Query>) -> impl Responder {
-    let start = Instant::now();
-    let answer = String::from("Cuillère.");
-    let duration = start.elapsed();
+async fn api(query: actix_web::Result<web::Query<Query>>) -> impl Responder {
+    match query {
+        Ok(query) => {
+            let start = Instant::now();
+            let answer = String::from("Cuillère.");
+            let duration = start.elapsed();
 
-    let res = APIResponse {
-        debate: query.debate.to_owned(),
-        elapsed_time: duration.as_micros(),
-        answer,
-    };
+            let res = APIResponse {
+                debate: query.debate.to_owned(),
+                elapsed_time: duration.as_micros(),
+                answer,
+            };
 
-    let res_text = serde_json::to_string(&res).unwrap();
+            let res_text = serde_json::to_string(&res).unwrap();
 
-    HttpResponse::Ok()
-        .header(CONTENT_TYPE, "application/json; charset=utf-8")
-        .body(res_text)
+            HttpResponse::Ok()
+                .header(CONTENT_TYPE, "application/json; charset=utf-8")
+                .body(res_text)
+        }
+        Err(_) => {
+            HttpResponse::BadRequest()
+                .header(CONTENT_TYPE, "application/json; charset=utf-8")
+                .body(serde_json::json!({
+                    "error": "Passez moi un query param \"debate\" pour que je puisse faire quelque chose"
+                }))
+        }
+    }
 }
 
 fn render_404(res: ServiceResponse<Body>) -> Result<ErrorHandlerResponse<Body>> {
