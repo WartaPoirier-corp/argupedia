@@ -3,10 +3,10 @@ use actix_web::middleware::errhandlers::{ErrorHandlers, ErrorHandlerResponse};
 use actix_web::http::{header::*, StatusCode};
 use actix_web::body::Body;
 use actix_web::dev::ServiceResponse;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use std::io::Write;
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, SystemTime, Instant};
 
 include!(concat!(env!("OUT_DIR"), "/templates.rs"));
 
@@ -57,6 +57,42 @@ async fn debate(query: web::Query<Query>) -> impl Responder {
                 "Cuillère."
             ]
         ))
+}
+
+#[derive(Serialize, Deserialize)]
+struct APIResponse {
+    debate: String,
+    elapsed_time: u128,
+    answer: String,
+}
+
+async fn api(query: actix_web::Result<web::Query<Query>>) -> impl Responder {
+    match query {
+        Ok(query) => {
+            let start = Instant::now();
+            let answer = String::from("Cuillère.");
+            let duration = start.elapsed();
+
+            let res = APIResponse {
+                debate: query.debate.to_owned(),
+                elapsed_time: duration.as_micros(),
+                answer,
+            };
+
+            let res_text = serde_json::to_string(&res).unwrap();
+
+            HttpResponse::Ok()
+                .header(CONTENT_TYPE, "application/json; charset=utf-8")
+                .body(res_text)
+        }
+        Err(_) => {
+            HttpResponse::BadRequest()
+                .header(CONTENT_TYPE, "application/json; charset=utf-8")
+                .body(serde_json::json!({
+                    "error": "Passez moi un query param \"debate\" pour que je puisse faire quelque chose"
+                }))
+        }
+    }
 }
 
 fn render_404(res: ServiceResponse<Body>) -> Result<ErrorHandlerResponse<Body>> {
@@ -112,6 +148,7 @@ async fn main() -> std::io::Result<()> {
             .route("/static/{filename}", web::get().to(static_file))
             .route("/", web::get().to(index))
             .route("/debate", web::get().to(debate))
+            .route("/api", web::get().to(api))
     })
     .bind("127.0.0.1:7878")?
     .run()
