@@ -1,12 +1,12 @@
-use actix_web::{web, Result, App, HttpResponse, HttpServer, Responder};
-use actix_web::middleware::errhandlers::{ErrorHandlers, ErrorHandlerResponse};
-use actix_web::http::{header::*, StatusCode};
 use actix_web::body::Body;
 use actix_web::dev::ServiceResponse;
+use actix_web::http::{header::*, StatusCode};
+use actix_web::middleware::errhandlers::{ErrorHandlerResponse, ErrorHandlers};
+use actix_web::{web, App, HttpResponse, HttpServer, Responder, Result};
 use serde::{Deserialize, Serialize};
 
 use std::io::Write;
-use std::time::{Duration, SystemTime, Instant};
+use std::time::{Duration, Instant, SystemTime};
 
 include!(concat!(env!("OUT_DIR"), "/templates.rs"));
 
@@ -22,25 +22,18 @@ macro_rules! render {
 
 pub struct Render<T: FnOnce(&mut dyn Write) -> std::io::Result<()>>(pub T);
 
-impl<T: FnOnce(&mut dyn Write) -> std::io::Result<()>> From<Render<T>>
-    for actix_web::body::Body
-{
+impl<T: FnOnce(&mut dyn Write) -> std::io::Result<()>> From<Render<T>> for actix_web::body::Body {
     fn from(t: Render<T>) -> Self {
         let mut buf = Vec::new();
         match t.0(&mut buf) {
             Ok(()) => buf.into(),
-            Err(_e) => {
-                "Render failed".into()
-            }
+            Err(_e) => "Render failed".into(),
         }
     }
 }
 
 async fn index() -> impl Responder {
-    HttpResponse::Ok()
-        .body(render!(
-            crate::templates::home
-        ))
+    HttpResponse::Ok().body(render!(crate::templates::home_html))
 }
 
 #[derive(Deserialize)]
@@ -49,14 +42,11 @@ struct Query {
 }
 
 async fn debate(query: web::Query<Query>) -> impl Responder {
-    HttpResponse::Ok()
-        .body(render!(
-            templates::debate,
-            query.debate.clone(),
-            vec![
-                "Cuillère."
-            ]
-        ))
+    HttpResponse::Ok().body(render!(
+        templates::debate_html,
+        query.debate.clone(),
+        vec!["Cuillère."]
+    ))
 }
 
 #[derive(Serialize, Deserialize)]
@@ -99,14 +89,13 @@ fn render_404(res: ServiceResponse<Body>) -> Result<ErrorHandlerResponse<Body>> 
     let mut res = res;
     res.headers_mut().insert(
         CONTENT_TYPE,
-        HeaderValue::from_str(mime::TEXT_HTML_UTF_8.as_ref())
-            .unwrap(),
+        HeaderValue::from_str(mime::TEXT_HTML_UTF_8.as_ref()).unwrap(),
     );
     Ok(ErrorHandlerResponse::Response(res.map_body(
         |_head, _body| {
             actix_web::dev::ResponseBody::Body(
                 render!(
-                    templates::error,
+                    templates::error_html,
                     "Page introuvable",
                     "On a cherché partout (oui, même sous le canapé), et on n'arrive pas à trouver cette page. Déso."
                 ).into()
@@ -115,22 +104,21 @@ fn render_404(res: ServiceResponse<Body>) -> Result<ErrorHandlerResponse<Body>> 
     )))
 }
 
-
 fn render_500(res: ServiceResponse<Body>) -> Result<ErrorHandlerResponse<Body>> {
     let mut res = res;
     res.headers_mut().insert(
         CONTENT_TYPE,
-        HeaderValue::from_str(mime::TEXT_HTML_UTF_8.as_ref())
-            .unwrap(),
+        HeaderValue::from_str(mime::TEXT_HTML_UTF_8.as_ref()).unwrap(),
     );
     Ok(ErrorHandlerResponse::Response(res.map_body(
         |_head, _body| {
             actix_web::dev::ResponseBody::Body(
                 render!(
-                    templates::error,
+                    templates::error_html,
                     "Erreur interne du serveur",
                     "On a tout cassé, mais vous inquiétez pas, on va tout réparer."
-                ).into()
+                )
+                .into(),
             )
         },
     )))
@@ -143,7 +131,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(
                 ErrorHandlers::new()
                     .handler(StatusCode::NOT_FOUND, render_404)
-                    .handler(StatusCode::INTERNAL_SERVER_ERROR, render_500)
+                    .handler(StatusCode::INTERNAL_SERVER_ERROR, render_500),
             )
             .route("/static/{filename}", web::get().to(static_file))
             .route("/", web::get().to(index))

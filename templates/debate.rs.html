@@ -1,16 +1,16 @@
-@use crate::templates::base;
+@use crate::templates::base_html;
 
 @(deb: String, args: Vec<&str>)
 
-@:base(&deb, {
-    <p>Vous débatez sur la question :</p>
-    <h1>@deb</h1>
-    <p>Pour gagner ce débat, c'est très simple, présentez ces arguments :</p>
-    <ul>
-        @for arg in args {
-            <li>@arg</li>
-        }
-    </ul>
-    <p>Et voilà, le tour est joué ! Personne ne saura quoi vous répondre !</p>
-    <a href="/">Revenir à l'accueil</a>
+@:base_html(&deb, {
+<p>Vous débatez sur la question :</p>
+<h1>@deb</h1>
+<p>Pour gagner ce débat, c'est très simple, présentez ces arguments :</p>
+<ul>
+    @for arg in args {
+    <li>@arg</li>
+    }
+</ul>
+<p>Et voilà, le tour est joué ! Personne ne saura quoi vous répondre !</p>
+<a href="/">Revenir à l'accueil</a>
 })
